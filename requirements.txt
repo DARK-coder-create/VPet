@@ -2,3 +2,5 @@ lupa
 PySide6
 PyYAML
 pyinstaller
+pydantic
+loguru
