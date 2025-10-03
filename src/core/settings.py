@@ -1,20 +1,11 @@
-from src.resource.loader import Loader
 from src.core.logger import logger
-from pydantic import BaseModel, ValidationError
-from pydantic import Field
-from typing import AnyStr, List
+from pydantic import ValidationError
 from pathlib import Path
 import os
 
+from src.core.models.m_settings import ModelSettings
 
 BASE_PATH_SETTINGS = Path("data/settings.yaml")
-
-
-class ModelSettings(BaseModel):
-    content_packs_dirs: List[AnyStr] = Field(default=["data/content_packs"]) # noqa
-    save_directory: List[AnyStr] = Field(default=["data/saves"]) # noqa
-    log_directory: AnyStr = "data/logs"
-    version: AnyStr = "unknown"
 
 
 class Settings:
@@ -24,6 +15,8 @@ class Settings:
 
     @staticmethod
     def load_settings(path: Path) -> ModelSettings:
+        from src.resource.loader import Loader
+
         logger.info(f"Load settings from {path}")
         if not os.path.exists(path):
             logger.warning(f"Not found {path}")
@@ -49,6 +42,8 @@ class Settings:
 
     @staticmethod
     def save_settings(path: Path, data: ModelSettings):
+        from src.resource.loader import Loader
+
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         Loader.save_yaml(path, data.model_dump())

@@ -1,5 +1,7 @@
+# logger.py с дополнениями
 from loguru import logger as loguru_logger
 import sys
+import logging
 from pathlib import Path
 
 
@@ -45,6 +47,37 @@ class LoggerSetup:
         }
         self.handlers.append(handler)
 
+    def _setup_standard_logging_intercept(self):
+        """Перехватывает стандартный logging и перенаправляет в loguru"""
+
+        class InterceptHandler(logging.Handler):
+            def emit(self, record):
+                try:
+                    level = loguru_logger.level(record.levelname).name
+                except ValueError:
+                    level = record.levelno
+
+                frame, depth = logging.currentframe(), 6
+                while frame and frame.f_code.co_filename == logging.__file__:
+                    frame = frame.f_back
+                    depth += 1
+
+                loguru_logger.opt(depth=depth, exception=record.exc_info).log(
+                    level, record.getMessage()
+                )
+
+        handler = InterceptHandler()
+        handler.setLevel(logging.DEBUG)
+
+        logging.basicConfig(handlers=[handler], level=logging.DEBUG, force=True)
+
+        # Для lupa и других библиотек
+        for lib_name in ['lupa']:
+            lib_logger = logging.getLogger(lib_name)
+            lib_logger.handlers = [handler]
+            lib_logger.propagate = False
+            lib_logger.setLevel(logging.DEBUG)
+
     def setup(self):
         if self._setup_done:
             return loguru_logger
@@ -58,6 +91,9 @@ class LoggerSetup:
         for handler in self.handlers:
             loguru_logger.add(**handler)
 
+        # Перенаправляем стандартный logging
+        self._setup_standard_logging_intercept()
+
         self._setup_done = True
         return loguru_logger
 
@@ -68,4 +104,5 @@ class LoggerSetup:
         self.add_file_handler("errors_{time}.log", level="ERROR", rotation="5 MB", retention="60 days")
 
 
+# Глобальный логгер
 logger = LoggerSetup().setup()

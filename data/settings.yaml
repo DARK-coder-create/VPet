@@ -1,6 +1,12 @@
+version: 1.0.0
+
 content_packs_dirs:
 - data/content_packs
-log_directory: data/logs
+
 save_directory:
 - data/saves
-version: unknown
+
+log_directory: data/logs
+file_name_for_content_pack: info # Писать без расширения файла
+
+global_timer_tick: 1 # в тиках
